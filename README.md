@@ -186,6 +186,114 @@ NameCombinationSet          GeneratedName
 | `npm run db:migrate` | Create and apply a migration             |
 | `npm run db:studio`  | Open Prisma Studio (visual DB browser)   |
 
+## CI/CD and Environment Variables
+
+### GitHub Actions CI Pipeline
+
+This project uses GitHub Actions for continuous integration. The workflow (`.github/workflows/ci.yml`) runs on every push and pull request to `main`.
+
+**What the CI Pipeline Does:**
+1. **Installs dependencies** using `npm ci`
+2. **Lints code** with ESLint
+3. **Runs tests** with Vitest
+4. **Builds the application** with Next.js
+5. **Uploads build artifacts** for Node 20
+
+**Matrix Strategy:** Tests run on both Node 20 and Node 22 to ensure compatibility.
+
+**Concurrency:** Only the latest commit's workflow runs; outdated workflows are cancelled to save runner time.
+
+### Setting Up GitHub Secrets
+
+To enable the CI pipeline to access your database:
+
+1. Go to your GitHub repository settings
+2. Navigate to **Settings → Secrets and variables → Actions**
+3. Click **New repository secret**
+4. Add `DATABASE_URL` with your test database connection string
+
+The secret is injected into the workflow environment and available to build and test jobs.
+
+### Environment Variables: Three Approaches
+
+GitHub Actions supports three ways to inject environment variables:
+
+1. **Workflow level** — Available to all jobs
+   ```yaml
+   env:
+     DATABASE_URL: ${{ secrets.DATABASE_URL }}
+   ```
+
+2. **Job level** — Available to all steps in that job (used in this project)
+   ```yaml
+   jobs:
+     build:
+       env:
+         DATABASE_URL: ${{ secrets.DATABASE_URL }}
+   ```
+
+3. **Step level** — Available only to that step
+   ```yaml
+   steps:
+     - name: Build
+       env:
+         DATABASE_URL: ${{ secrets.DATABASE_URL }}
+       run: npm run build
+   ```
+
+This project uses **job level** for clarity and reusability.
+
+### FAQ: .env.local vs .env vs CI
+
+**Q: Why should .env.local never be committed?**
+
+A: `.env.local` contains sensitive credentials (API keys, database passwords) specific to your local machine. Committing it exposes secrets to anyone with repo access and in git history forever. The `.gitignore` prevents accidental commits, but you should never remove this protection.
+
+**Q: Why are GitHub Secrets safer than hardcoding values?**
+
+A: GitHub Secrets are:
+- Encrypted at rest and in transit
+- Masked in logs (you'll see `***` instead of the actual value)
+- Only accessible to authorized workflows
+- Rotatable without code changes
+
+Hardcoded values are visible to anyone reading the repository or logs, making them a critical security risk.
+
+**Q: What happens if you hardcode the secret in your YAML?**
+
+Example (DON'T DO THIS):
+```yaml
+env:
+  DATABASE_URL: "postgresql://user:password@localhost:5432/devdb"
+```
+
+**Problems:**
+- The credential is visible in every git commit and pull request
+- CI logs may expose it if the build fails
+- Anyone with repo access sees your production database URL
+- Rotating the password requires committing code changes
+- Audit trails become useless
+
+Use `${{ secrets.DATABASE_URL }}` instead, which masks the value in logs.
+
+**Q: What's the difference between .env and .env.local?**
+
+- **`.env`** — Default environment file; safe to commit (shared team config)
+- **`.env.local`** — Local overrides; git-ignored (machine-specific secrets)
+- **`.env.example`** — Template for contributors (shows required variables without values)
+
+In CI, environment variables come from GitHub Secrets, not `.env` files.
+
+### Debugging Environment Variable Failures in CI
+
+If your CI build fails with "DATABASE_URL is not defined":
+
+1. **Verify the secret exists** in GitHub Settings → Secrets
+2. **Check the secret is spelled correctly** (case-sensitive: `DATABASE_URL`, not `database_url`)
+3. **Ensure the job has `env:` block** with `${{ secrets.DATABASE_URL }}`
+4. **Look at the logs** — sensitive values are masked with `***`
+5. **Don't hardcode values to debug** — redeploy the secret instead
+
 ## Troubleshooting
 
 - **"NEXT_REDIRECT" error**: This is normal — Auth.js uses Next.js redirects internally. It's not a bug.
