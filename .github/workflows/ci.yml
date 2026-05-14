@@ -38,16 +38,17 @@ jobs:
     strategy:
       matrix:
         node-version: [20, 22]
-    env:
-      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+    # TEMPORARILY REMOVED FOR TESTING: DATABASE_URL secret
+    # env:
+    #   DATABASE_URL: ${{ secrets.DATABASE_URL }}
     steps:
       - uses: actions/checkout@v4
 
       - name: Verify DATABASE_URL is set
         run: |
           if [ -z "$DATABASE_URL" ]; then
-            echo "ERROR: DATABASE_URL environment variable is not set!"
-            echo "This means the GitHub Secret is missing or not configured."
+            echo "❌ ERROR: DATABASE_URL environment variable is not set!"
+            echo "This would happen if the GitHub Secret is missing or not configured."
             exit 1
           fi
           echo "✓ DATABASE_URL is properly configured"
@@ -69,8 +70,9 @@ jobs:
     strategy:
       matrix:
         node-version: [20, 22]
-    env:
-      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+    # TEMPORARILY REMOVED FOR TESTING: DATABASE_URL secret
+    # env:
+    #   DATABASE_URL: ${{ secrets.DATABASE_URL }}
     steps:
       - uses: actions/checkout@v4
 
