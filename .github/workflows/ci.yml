@@ -43,6 +43,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Verify DATABASE_URL is set
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "ERROR: DATABASE_URL environment variable is not set!"
+            echo "This means the GitHub Secret is missing or not configured."
+            exit 1
+          fi
+          echo "✓ DATABASE_URL is properly configured"
+
       - name: Setup Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
