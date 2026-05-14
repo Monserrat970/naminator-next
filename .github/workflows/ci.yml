@@ -38,9 +38,8 @@ jobs:
     strategy:
       matrix:
         node-version: [20, 22]
-    # TEMPORARILY REMOVED FOR TESTING: DATABASE_URL secret
-    # env:
-    #   DATABASE_URL: ${{ secrets.DATABASE_URL }}
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
     steps:
       - uses: actions/checkout@v4
 
@@ -70,9 +69,8 @@ jobs:
     strategy:
       matrix:
         node-version: [20, 22]
-    # TEMPORARILY REMOVED FOR TESTING: DATABASE_URL secret
-    # env:
-    #   DATABASE_URL: ${{ secrets.DATABASE_URL }}
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
     steps:
       - uses: actions/checkout@v4
 
